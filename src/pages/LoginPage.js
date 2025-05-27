@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { FcGoogle } from 'react-icons/fc' // Google icon
+import LogRocket from 'logrocket'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -24,22 +25,31 @@ export default function LoginPage() {
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
-        email,
-        password,
-      })
+  e.preventDefault();
+  try {
+    const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth/login`, {
+      email,
+      password,
+    });
 
-      const { token, username } = res.data
-      console.log('Login successful:', username)
-      localStorage.setItem('token', token)
-      navigate('/dashboard')
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed'
-      alert(msg)
-    }
+    const { token, _id, username, email: userEmail } = res.data;
+
+    // Save token
+    localStorage.setItem('token', token);
+
+    // LogRocket user tracking
+    LogRocket.identify(_id, {
+      name: username,
+      email: userEmail,
+    });
+
+    console.log('Login successful:', username);
+    navigate('/dashboard');
+  } catch (err) {
+    const msg = err.response?.data?.message || 'Login failed';
+    alert(msg);
   }
+};
 
   // Handle Google login button click
   const handleGoogleLogin = () => {
